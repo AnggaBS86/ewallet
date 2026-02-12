@@ -354,6 +354,10 @@ Response example:
 - Query Params:
   - `page` optional, default `1`
   - `limit` optional, default `50`, max `100`
+- Pagination behavior:
+  - Invalid `page` or `limit` values fallback to defaults.
+  - `offset` is computed as `(page - 1) * limit`.
+  - Response includes `pagination.total` and `pagination.total_pages`.
 
 Curl:
 
