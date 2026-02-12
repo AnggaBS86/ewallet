@@ -54,6 +54,13 @@ migrate -path ./migrations -database "postgres://${DB_USER}:${DB_PASSWORD}@${DB_
 go run ./cmd/server
 ```
 
+Run with Air (hot reload):
+
+```bash
+go install github.com/air-verse/air@latest
+air -c .air.toml
+```
+
 ## Caching
 - Transaction history (`GET /api/transactions/history`) uses in-memory cache.
 - Cache implementation uses `github.com/AnggaBS86/gocachemem`.
