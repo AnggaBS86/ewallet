@@ -389,3 +389,30 @@ Run all tests:
 ```bash
 go test ./...
 ```
+
+### Integration Test
+- Integration test file: `tests/integration_test.go`
+- Scope covered:
+  - Register user
+  - Login user
+  - Top up wallet
+  - Transfer balance
+  - Fetch transaction history (with sender/receiver user info)
+- Test uses real PostgreSQL and runs migration reset (`down` then `up`) before execution.
+
+Required test DB env (already available in `.env.example`):
+- `TEST_DB_HOST`
+- `TEST_DB_PORT`
+- `TEST_DB_USER`
+- `TEST_DB_PASSWORD`
+- `TEST_DB_NAME`
+- `TEST_DB_SSLMODE`
+
+Run integration test only:
+
+```bash
+set -a
+source .env
+set +a
+go test ./tests -v
+```
