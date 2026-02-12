@@ -27,6 +27,8 @@ func (s *transactionService) Transfer(senderID uint, req dto.TransferRequest) (*
 		}
 		return nil, err
 	}
+
+	// cannot transfer to itself
 	if receiver.ID == senderID {
 		return nil, ErrSelfTransfer
 	}
