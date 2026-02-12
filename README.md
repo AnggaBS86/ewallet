@@ -14,12 +14,16 @@ Use `.env.example` as template.
 APP_ENV=development
 PORT=8080
 JWT_SECRET=change_this_secret
+
+# DB configuration
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=ewallet
 DB_SSLMODE=disable
+
+# Test DB configuration
 TEST_DB_HOST=localhost
 TEST_DB_PORT=5432
 TEST_DB_USER=postgres
@@ -30,7 +34,7 @@ TEST_DB_SSLMODE=disable
 
 ## Setup
 1. Copy `.env.example` to `.env` and set values.
-2. Create database (example: `ewallet`).
+2. Create databases (example: `ewallet` and `ewallet_test`).
 3. Load environment variables:
 
 ```bash
@@ -55,6 +59,25 @@ go run ./cmd/server
 - Cache implementation uses `github.com/AnggaBS86/gocachemem`.
 - For more information please see the documentation https://github.com/AnggaBS86/gocachemem?tab=readme-ov-file#gocachemem 
 - Cache is invalidated automatically after successful transfer (`POST /api/transactions/transfer`) for both sender and receiver.
+
+## Transaction Handling
+- Transfer is executed in a single database transaction for atomic debit-credit behavior.
+- Wallet rows are locked using `SELECT ... FOR UPDATE` during transfer execution.
+- Locking order is deterministic (sorted user IDs) to avoid deadlock in concurrent transfers.
+- Validations enforced before commit:
+  - Amount must be greater than zero.
+  - Sender cannot transfer to self.
+  - Sender balance must be sufficient.
+- Transfer record is written only after both wallet updates succeed.
+- Any failure triggers rollback, so no partial update is persisted.
+
+## Author Note
+- Wallet implementation approach in this project is based on practical backend experience while working at `cicil.co.id`
+
+## Postman Collection
+- You can import ready-to-use collection from `docs/postman_collection.json`.
+- In Postman: `Import` -> `Upload Files` -> choose `docs/postman_collection.json`.
+- Collection includes auth, wallet, and transaction requests with sample payloads.
 
 ## Response Format
 Success:
