@@ -49,4 +49,12 @@ type TransactionHistoryItem struct {
 
 type TransactionHistoryResponse struct {
 	Transactions []TransactionHistoryItem `json:"transactions"`
+	Pagination   PaginationMeta           `json:"pagination"`
+}
+
+type PaginationMeta struct {
+	Page       int `json:"page"`
+	Limit      int `json:"limit"`
+	Total      int `json:"total"`
+	TotalPages int `json:"total_pages"`
 }

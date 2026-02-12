@@ -12,8 +12,8 @@ import (
 // HistoryCache is a local-process cache for transaction history responses.
 // It is intentionally simple (in-memory) and must be invalidated on balance-changing operations.
 type HistoryCache interface {
-	Get(userID uint, limit int) (*dto.TransactionHistoryResponse, bool)
-	Set(userID uint, limit int, resp *dto.TransactionHistoryResponse)
+	Get(userID uint, page, limit int) (*dto.TransactionHistoryResponse, bool)
+	Set(userID uint, page, limit int, resp *dto.TransactionHistoryResponse)
 	InvalidateUser(userID uint)
 }
 
@@ -42,12 +42,12 @@ func NewInMemoryHistoryCache(ttl time.Duration) HistoryCache {
 	}
 }
 
-func (c *inMemoryHistoryCache) key(userID uint, limit int) string {
-	return strconv.FormatUint(uint64(userID), 10) + ":" + strconv.Itoa(limit)
+func (c *inMemoryHistoryCache) key(userID uint, page, limit int) string {
+	return strconv.FormatUint(uint64(userID), 10) + ":" + strconv.Itoa(page) + ":" + strconv.Itoa(limit)
 }
 
-func (c *inMemoryHistoryCache) Get(userID uint, limit int) (*dto.TransactionHistoryResponse, bool) {
-	k := c.key(userID, limit)
+func (c *inMemoryHistoryCache) Get(userID uint, page, limit int) (*dto.TransactionHistoryResponse, bool) {
+	k := c.key(userID, page, limit)
 	val, ok := c.store.Get(k)
 	if !ok {
 		return nil, false
@@ -60,8 +60,8 @@ func (c *inMemoryHistoryCache) Get(userID uint, limit int) (*dto.TransactionHist
 	return cloneHistoryResponse(entry.value), true
 }
 
-func (c *inMemoryHistoryCache) Set(userID uint, limit int, resp *dto.TransactionHistoryResponse) {
-	k := c.key(userID, limit)
+func (c *inMemoryHistoryCache) Set(userID uint, page, limit int, resp *dto.TransactionHistoryResponse) {
+	k := c.key(userID, page, limit)
 	c.store.Set(k, historyCacheEntry{
 		value:     cloneHistoryResponse(resp),
 		expiresAt: time.Now().Add(c.ttl),
@@ -92,6 +92,7 @@ func cloneHistoryResponse(in *dto.TransactionHistoryResponse) *dto.TransactionHi
 	}
 	out := &dto.TransactionHistoryResponse{
 		Transactions: make([]dto.TransactionHistoryItem, len(in.Transactions)),
+		Pagination:   in.Pagination,
 	}
 	copy(out.Transactions, in.Transactions)
 	return out

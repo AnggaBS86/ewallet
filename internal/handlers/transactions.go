@@ -54,6 +54,13 @@ func (h *TransactionHandler) Transfer(c echo.Context) error {
 func (h *TransactionHandler) History(c echo.Context) error {
 	userID := c.Get("user_id").(uint)
 
+	page := 1
+	if v := c.QueryParam("page"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			page = n
+		}
+	}
+
 	limit := 50
 	if v := c.QueryParam("limit"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
@@ -64,7 +71,7 @@ func (h *TransactionHandler) History(c echo.Context) error {
 		}
 	}
 
-	res, err := h.transactionService.History(userID, limit)
+	res, err := h.transactionService.History(userID, page, limit)
 	if err != nil {
 		return utils.RespErr(c, http.StatusInternalServerError, "failed to fetch history", nil)
 	}

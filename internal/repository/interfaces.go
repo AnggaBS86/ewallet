@@ -16,7 +16,8 @@ type WalletRepository interface {
 
 type TransactionRepository interface {
 	Transfer(senderID, receiverID uint, amount int64) (*models.Transaction, error)
-	FindByUser(userID uint, limit int) ([]models.Transaction, error)
+	FindByUser(userID uint, limit, offset int) ([]models.Transaction, error)
+	CountByUser(userID uint) (int64, error)
 }
 
 type RevokedTokenRepository interface {

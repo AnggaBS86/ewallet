@@ -136,16 +136,29 @@ func (r *TransactionRepository) Transfer(senderID, receiverID uint, amount int64
 //   - Receiver
 //
 // Results are ordered by newest first.
-func (r *TransactionRepository) FindByUser(userID uint, limit int) ([]models.Transaction, error) {
+func (r *TransactionRepository) FindByUser(userID uint, limit, offset int) ([]models.Transaction, error) {
 	var transactions []models.Transaction
 
 	if err := r.db.
+		Preload("Sender").
+		Preload("Receiver").
 		Where("sender_id = ? OR receiver_id = ?", userID, userID).
 		Order("created_at desc").
 		Limit(limit).
+		Offset(offset).
 		Find(&transactions).Error; err != nil {
 		return nil, err
 	}
 
 	return transactions, nil
+}
+
+func (r *TransactionRepository) CountByUser(userID uint) (int64, error) {
+	var total int64
+	if err := r.db.Model(&models.Transaction{}).
+		Where("sender_id = ? OR receiver_id = ?", userID, userID).
+		Count(&total).Error; err != nil {
+		return 0, err
+	}
+	return total, nil
 }

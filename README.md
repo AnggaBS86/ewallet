@@ -352,12 +352,13 @@ Response example:
 - Path: `/api/transactions/history`
 - Auth: `Yes`
 - Query Params:
+  - `page` optional, default `1`
   - `limit` optional, default `50`, max `100`
 
 Curl:
 
 ```bash
-curl -X GET "$BASE_URL/api/transactions/history?limit=50" \
+curl -X GET "$BASE_URL/api/transactions/history?page=1&limit=50" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -385,7 +386,13 @@ Response example:
         "status": "completed",
         "created_at": "2026-02-12T10:00:00Z"
       }
-    ]
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 50,
+      "total": 1,
+      "total_pages": 1
+    }
   }
 }
 ```

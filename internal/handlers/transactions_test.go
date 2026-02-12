@@ -32,7 +32,7 @@ func (m *mockTransactionService) Transfer(_ uint, _ dto.TransferRequest) (*dto.T
 	return m.transferResp, m.transferErr
 }
 
-func (m *mockTransactionService) History(_ uint, _ int) (*dto.TransactionHistoryResponse, error) {
+func (m *mockTransactionService) History(_ uint, _, _ int) (*dto.TransactionHistoryResponse, error) {
 	return m.historyResp, m.historyErr
 }
 

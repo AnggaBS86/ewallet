@@ -21,6 +21,8 @@ type Transaction struct {
 	ID         uint      `gorm:"primaryKey"`
 	SenderID   uint      `gorm:"index;not null"`
 	ReceiverID uint      `gorm:"index;not null"`
+	Sender     User      `gorm:"foreignKey:SenderID;references:ID"`
+	Receiver   User      `gorm:"foreignKey:ReceiverID;references:ID"`
 	Amount     int64     `gorm:"not null"`
 	Status     string    `gorm:"type:varchar(20);not null"`
 	CreatedAt  time.Time `gorm:"autoCreateTime"`

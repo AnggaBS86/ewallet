@@ -20,5 +20,5 @@ type WalletService interface {
 
 type TransactionService interface {
 	Transfer(senderID uint, req dto.TransferRequest) (*dto.TransferResponse, error)
-	History(userID uint, limit int) (*dto.TransactionHistoryResponse, error)
+	History(userID uint, page, limit int) (*dto.TransactionHistoryResponse, error)
 }

@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"sort"
 	"time"
 
 	"ewallet/internal/dto"
@@ -54,55 +53,55 @@ func (s *transactionService) Transfer(senderID uint, req dto.TransferRequest) (*
 	return &dto.TransferResponse{TransactionID: tx.ID, Status: tx.Status}, nil
 }
 
-func (s *transactionService) History(userID uint, limit int) (*dto.TransactionHistoryResponse, error) {
+func (s *transactionService) History(userID uint, page, limit int) (*dto.TransactionHistoryResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+
 	if s.cache != nil {
-		if cached, ok := s.cache.Get(userID, limit); ok {
+		if cached, ok := s.cache.Get(userID, page, limit); ok {
 			return cached, nil
 		}
 	}
 
-	transactions, err := s.transactions.FindByUser(userID, limit)
+	offset := (page - 1) * limit
+	transactions, err := s.transactions.FindByUser(userID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
-
-	userIDs := map[uint]struct{}{}
-	for _, tx := range transactions {
-		userIDs[tx.SenderID] = struct{}{}
-		userIDs[tx.ReceiverID] = struct{}{}
-	}
-
-	ids := make([]uint, 0, len(userIDs))
-	for id := range userIDs {
-		ids = append(ids, id)
-	}
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
-
-	users, err := s.users.FindByIDs(ids)
+	total, err := s.transactions.CountByUser(userID)
 	if err != nil {
 		return nil, err
-	}
-
-	byID := make(map[uint]dto.UserInfo, len(users))
-	for _, u := range users {
-		byID[u.ID] = dto.UserInfo{ID: u.ID, Name: u.Name, Email: u.Email}
 	}
 
 	items := make([]dto.TransactionHistoryItem, 0, len(transactions))
 	for _, tx := range transactions {
 		items = append(items, dto.TransactionHistoryItem{
 			ID:        tx.ID,
-			Sender:    byID[tx.SenderID],
-			Receiver:  byID[tx.ReceiverID],
+			Sender:    dto.UserInfo{ID: tx.Sender.ID, Name: tx.Sender.Name, Email: tx.Sender.Email},
+			Receiver:  dto.UserInfo{ID: tx.Receiver.ID, Name: tx.Receiver.Name, Email: tx.Receiver.Email},
 			Amount:    tx.Amount,
 			Status:    tx.Status,
 			CreatedAt: tx.CreatedAt.Format(time.RFC3339),
 		})
 	}
 
-	res := &dto.TransactionHistoryResponse{Transactions: items}
+	totalPages := 0
+	if limit > 0 {
+		totalPages = int((total + int64(limit) - 1) / int64(limit))
+	}
+
+	res := &dto.TransactionHistoryResponse{
+		Transactions: items,
+		Pagination: dto.PaginationMeta{
+			Page:       page,
+			Limit:      limit,
+			Total:      int(total),
+			TotalPages: totalPages,
+		},
+	}
 	if s.cache != nil {
-		s.cache.Set(userID, limit, res)
+		s.cache.Set(userID, page, limit, res)
 	}
 	return res, nil
 }
